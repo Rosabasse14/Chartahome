@@ -17,19 +17,33 @@ export default function Managers() {
     const [newManager, setNewManager] = useState({ name: '', phone: '', email: '', city: 'Douala' });
     const [selectedManager, setSelectedManager] = useState<Manager | null>(null);
 
-    const handleAddManager = () => {
-        if (newManager.name && newManager.phone && newManager.email) {
-            const manager: Manager = {
-                id: Date.now().toString(),
-                ...newManager,
-                status: 'active'
-            };
-            addManager(manager);
+    const handleAddManager = async () => {
+        if (!newManager.name || !newManager.phone || !newManager.email) {
+            toast.error("Please fill in all required fields");
+            return;
+        }
+
+        // Generate a UUID or fallback to a unique string that looks like a UUID if possible
+        // but for standard Supabase UUID columns, it MUST be a valid UUID.
+        // If crypto.randomUUID is not available, try to generate a pseudo-UUID.
+        let managerId;
+        try {
+            managerId = crypto.randomUUID();
+        } catch (e) {
+            managerId = '00000000-0000-4000-8000-' + Date.now().toString(16).padStart(12, '0');
+        }
+
+        const manager: Manager = {
+            id: managerId,
+            ...newManager,
+            status: 'active'
+        };
+
+        const success = await addManager(manager);
+        if (success) {
             setNewManager({ name: '', phone: '', email: '', city: 'Douala' });
             setIsDialogOpen(false);
             toast.success("Manager onboarded successfully!");
-        } else {
-            toast.error("Please fill in all required fields");
         }
     };
 

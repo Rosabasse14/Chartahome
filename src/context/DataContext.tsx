@@ -1,17 +1,8 @@
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Property, Unit, Tenant, RentLedgerEntry, PaymentProof, OverduePayment, Manager } from '@/types';
-import {
-    properties as initialProperties,
-    units as initialUnits,
-    tenants as initialTenants,
-    rentLedger as initialLedger,
-    paymentProofs as initialProofs,
-    overduePayments as initialOverdue,
-    managers as initialManagers
-} from '@/data/mockData';
-
-
+import { supabase } from '@/lib/supabase';
+import { toast } from "sonner";
 interface DataContextType {
     properties: Property[];
     units: Unit[];
@@ -24,9 +15,9 @@ interface DataContextType {
     deleteProperty: (id: string) => void;
     addUnit: (unit: Unit) => void;
     deleteUnit: (id: string) => void;
-    addTenant: (tenant: Tenant) => void;
+    addTenant: (tenant: Tenant) => Promise<boolean>;
     deleteTenant: (id: string) => void;
-    addManager: (manager: Manager) => void;
+    addManager: (manager: Manager) => Promise<boolean>;
     vacateUnit: (tenantId: string) => void;
     addPaymentProof: (proof: PaymentProof) => void;
     verifyPayment: (paymentId: string, status: 'paid' | 'rejected') => void;
@@ -38,62 +29,197 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider = ({ children }: { children: ReactNode }) => {
-    const [properties, setProperties] = useState<Property[]>(initialProperties);
-    const [units, setUnits] = useState<Unit[]>(initialUnits);
-    const [tenants, setTenants] = useState<Tenant[]>(initialTenants);
-    const [managers, setManagers] = useState<Manager[]>(initialManagers);
-    const [rentLedger, setRentLedger] = useState<RentLedgerEntry[]>(initialLedger);
-    const [paymentProofs, setPaymentProofs] = useState<PaymentProof[]>(initialProofs);
-    const [overduePayments, setOverduePayments] = useState<OverduePayment[]>(initialOverdue);
+    const [properties, setProperties] = useState<Property[]>([]);
+    const [units, setUnits] = useState<Unit[]>([]);
+    const [tenants, setTenants] = useState<Tenant[]>([]);
+    const [managers, setManagers] = useState<Manager[]>([]);
+    const [rentLedger, setRentLedger] = useState<RentLedgerEntry[]>([]);
+    const [paymentProofs, setPaymentProofs] = useState<PaymentProof[]>([]);
+    const [overduePayments, setOverduePayments] = useState<OverduePayment[]>([]);
 
-    const addProperty = (property: Property) => setProperties([...properties, property]);
-    const deleteProperty = (id: string) => setProperties(properties.filter(p => p.id !== id));
+    const fetchData = async () => {
+        try {
+            // Fetch Properties
+            const { data: propData } = await supabase.from('properties').select('*');
+            if (propData) {
+                setProperties(propData.map(p => ({
+                    id: p.id, name: p.name, address: p.address,
+                    units: 0,
+                    type: p.type || 'Residential', managerId: p.manager_id,
+                    description: p.description,
+                    city: p.city,
+                    state: p.state,
+                    zipCode: p.zip_code,
+                    imageUrl: p.image_url,
+                    amenities: p.amenities
+                })));
+            }
 
-    const addUnit = (unit: Unit) => setUnits([...units, unit]);
-    const deleteUnit = (id: string) => setUnits(units.filter(u => u.id !== id));
+            // Fetch Units with Property Name
+            const { data: unitData } = await supabase.from('units').select('*, properties(name)');
+            if (unitData) {
+                setUnits(unitData.map((u: any) => ({
+                    id: u.id, name: u.name, monthlyRent: u.monthly_rent,
+                    status: u.status, propertyId: u.property_id,
+                    propertyName: u.properties?.name || 'Unknown',
+                    type: u.type || 'Standard',
+                    description: u.description,
+                    bedrooms: u.bedrooms,
+                    bathrooms: u.bathrooms,
+                    sizeSqm: u.size_sqm,
+                    floorNumber: u.floor_number,
+                    depositAmount: u.deposit_amount,
+                    maintenanceFee: u.maintenance_fee
+                })));
+            }
 
-    const addTenant = (tenant: Tenant) => {
-        setTenants([...tenants, tenant]);
-        if (tenant.unitId) {
-            setUnits(prevUnits => prevUnits.map(u =>
-                u.id === tenant.unitId
-                    ? { ...u, status: 'occupied', tenantName: tenant.name }
-                    : u
-            ));
+            // Fetch Tenants with Unit Name
+            const { data: tenantData } = await supabase.from('tenants').select('*, units(name, properties(name))');
+            if (tenantData) {
+                setTenants(tenantData.map((t: any) => ({
+                    id: t.id, name: t.name, email: t.email,
+                    unitId: t.unit_id,
+                    unitName: t.units?.name || 'Unassigned',
+                    propertyName: t.units?.properties?.name || 'Unassigned',
+                    status: t.is_active ? 'active' : 'inactive',
+                    entryDate: t.lease_start || new Date().toISOString(),
+                    rentDueDay: 5
+                })));
+            }
+
+            // Fetch Managers
+            const { data: managerData } = await supabase.from('managers').select('*');
+            if (managerData) setManagers(managerData);
+
+            // Fetch Payments
+            const { data: payData } = await supabase.from('payments').select('*, tenants(name), units(name)');
+            if (payData) {
+                setPaymentProofs(payData.map((p: any) => ({
+                    id: p.id,
+                    proofNumber: p.id.substring(0, 8),
+                    amount: p.amount,
+                    period: p.period,
+                    status: p.status,
+                    paymentMethod: p.payment_method,
+                    notes: p.notes,
+                    fileUrl: p.proof_url,
+                    tenantId: p.tenant_id,
+                    unitId: p.unit_id,
+                    tenantName: p.tenants?.name || 'Unknown',
+                    unitName: p.units?.name || 'Unknown',
+                    submittedAt: new Date(p.submitted_at).toLocaleString()
+                })));
+            }
+        } catch (error) {
+            console.error("Error fetching from Supabase:", error);
         }
     };
 
-    const deleteTenant = (id: string) => {
-        const tenant = tenants.find(t => t.id === id);
-        if (tenant) {
-            setUnits(prevUnits => prevUnits.map(u =>
-                u.id === tenant.unitId
-                    ? { ...u, status: 'vacant', tenantName: undefined }
-                    : u
-            ));
-        }
-        setTenants(tenants.filter(t => t.id !== id));
+    useEffect(() => {
+        fetchData();
+
+        // Realtime Subscription
+        const channel = supabase
+            .channel('db-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'payments' }, () => fetchData())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'tenants' }, () => fetchData())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'units' }, () => fetchData())
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, []);
+
+    const addProperty = async (property: Property) => {
+        const { error } = await supabase.from('properties').insert([property]);
+        if (error) console.error("Error saving property:", error);
+        fetchData();
     };
 
-    const addManager = (manager: Manager) => setManagers([...managers, manager]);
+    const deleteProperty = async (id: string) => {
+        const { error } = await supabase.from('properties').delete().eq('id', id);
+        if (error) console.error("Error deleting property:", error);
+        fetchData();
+    };
 
-    const vacateUnit = (tenantId: string) => {
+    const addUnit = async (unit: Unit) => {
+        const { error } = await supabase.from('units').insert([unit]);
+        if (error) console.error("Error saving unit:", error);
+        fetchData();
+    };
+
+    const deleteUnit = async (id: string) => {
+        const { error } = await supabase.from('units').delete().eq('id', id);
+        if (error) console.error("Error deleting unit:", error);
+        fetchData();
+    };
+
+    const addTenant = async (tenant: Tenant) => {
+        const { error } = await supabase.from('tenants').insert([tenant]);
+        if (error) {
+            console.error("Error saving tenant:", error);
+            toast.error("Failed to add tenant: " + error.message);
+            return false;
+        }
+
+        toast.success("Tenant added successfully");
+        fetchData();
+        return true;
+    };
+
+    const deleteTenant = async (id: string) => {
+        const { error } = await supabase.from('tenants').delete().eq('id', id);
+        if (error) console.error("Error deleting tenant:", error);
+        fetchData();
+    };
+
+    const addManager = async (manager: Manager) => {
+        const { error } = await supabase.from('managers').insert([manager]);
+        if (error) {
+            console.error("Error saving manager:", error.message, error);
+            toast.error("Failed to add manager. " + error.message);
+            return false;
+        }
+
+        toast.success("Manager added successfully");
+        fetchData();
+        return true;
+    };
+
+    const vacateUnit = async (tenantId: string) => {
         const tenant = tenants.find(t => t.id === tenantId);
         if (!tenant) return;
-        setTenants(prev => prev.map(t => t.id === tenantId ? { ...t, status: 'inactive' } : t));
-        if (tenant.unitId) {
-            setUnits(prev => prev.map(u =>
-                u.id === tenant.unitId ? { ...u, status: 'vacant', tenantName: undefined } : u
-            ));
-        }
+
+        await supabase.from('tenants').update({ is_active: false, unit_id: null }).eq('id', tenantId);
+        await supabase.from('units').update({ status: 'vacant' }).eq('id', tenant.unitId);
+        fetchData();
     };
 
-    const addPaymentProof = (proof: PaymentProof) => {
-        setPaymentProofs([proof, ...paymentProofs]);
+    const addPaymentProof = async (proof: PaymentProof) => {
+        const tenant = tenants.find(t => t.name === proof.tenantName);
+        if (!tenant) return;
+
+        const dbPayload = {
+            tenant_id: tenant.id,
+            unit_id: tenant.unitId,
+            amount: proof.amount,
+            period: proof.period,
+            status: 'pending',
+            proof_url: proof.fileUrl,
+            payment_method: proof.paymentMethod,
+            notes: proof.notes
+        };
+
+        const { error } = await supabase.from('payments').insert([dbPayload]);
+        if (error) console.error("Error saving payment:", error);
+        fetchData();
     };
 
-    const verifyPayment = (paymentId: string, status: 'paid' | 'rejected') => {
-        setPaymentProofs(prev => prev.map(p => p.id === paymentId ? { ...p, status } : p));
+    const verifyPayment = async (paymentId: string, status: 'paid' | 'rejected') => {
+        const { error } = await supabase.from('payments').update({ status }).eq('id', paymentId);
+        if (error) console.error("Error verifying payment:", error);
+        fetchData();
     };
 
     const updatePaymentStatus = (id: string, status: 'paid' | 'partial' | 'pending') => {
@@ -103,11 +229,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const getUnpaidUnits = (currentMonth: string) => {
         return units.filter(unit => {
             if (unit.status !== 'occupied') return false;
-
             const proofs = paymentProofs.filter(p =>
-                p.unitName === unit.name &&
-                p.period === currentMonth &&
-                p.status === 'paid'
+                p.unitId === unit.id && p.period === currentMonth && p.status === 'paid'
             );
             const totalPaid = proofs.reduce((sum, p) => sum + p.amount, 0);
             return totalPaid < unit.monthlyRent;
@@ -115,7 +238,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const refreshLedger = () => {
-        console.log("Refreshed ledger data");
+        fetchData();
     };
 
     return (

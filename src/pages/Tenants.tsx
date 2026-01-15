@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -42,25 +43,39 @@ export default function Tenants() {
     rentDueDay: "5",
   });
 
-  const handleAddTenant = () => {
-    if (newTenant.name && newTenant.phone && newTenant.entryDate) {
-      const unit = units.find((u) => u.id === newTenant.unitId);
-      const tenant: Tenant = {
-        id: Date.now().toString(),
-        name: newTenant.name,
-        email: newTenant.email || "",
-        phone: newTenant.phone,
-        nationalId: newTenant.nationalId,
-        unitId: newTenant.unitId,
-        unitName: unit?.name || "",
-        propertyName: unit?.propertyName || "",
-        status: "active",
-        entryDate: newTenant.entryDate,
-        rentDueDay: parseInt(newTenant.rentDueDay),
-      };
-      addTenant(tenant);
+  const handleAddTenant = async () => {
+    if (!newTenant.name || !newTenant.phone || !newTenant.entryDate) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    let tenantId;
+    try {
+      tenantId = crypto.randomUUID();
+    } catch (e) {
+      tenantId = '00000000-0000-4000-8000-' + Date.now().toString(16).padStart(12, '0');
+    }
+
+    const unit = units.find((u) => u.id === newTenant.unitId);
+    const tenant: Tenant = {
+      id: tenantId,
+      name: newTenant.name,
+      email: newTenant.email,
+      phone: newTenant.phone,
+      nationalId: newTenant.nationalId,
+      unitId: newTenant.unitId,
+      unitName: unit?.name || "",
+      propertyName: unit?.propertyName || "",
+      status: "active",
+      entryDate: newTenant.entryDate,
+      rentDueDay: parseInt(newTenant.rentDueDay),
+    };
+
+    const success = await addTenant(tenant);
+    if (success) {
       setNewTenant({ name: "", email: "", phone: "", unitId: "", nationalId: "", entryDate: "", rentDueDay: "5" });
       setIsDialogOpen(false);
+      toast.success("Tenant onboarded successfully!");
     }
   };
 

@@ -3,8 +3,14 @@ export interface Property {
   name: string;
   address: string;
   units: number;
-  type: string; // e.g. Compound, Block, Studio
+  type: string;
   managerId: string;
+  description?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  imageUrl?: string;
+  amenities?: string[];
 }
 
 export interface Unit {
@@ -13,9 +19,16 @@ export interface Unit {
   propertyId: string;
   propertyName: string;
   monthlyRent: number;
-  type: string; // e.g. Room, Studio, Apartment
+  type: string;
   status: 'vacant' | 'occupied';
   tenantName?: string;
+  description?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  sizeSqm?: number;
+  floorNumber?: number;
+  depositAmount?: number;
+  maintenanceFee?: number;
 }
 
 export interface Tenant {
@@ -54,6 +67,8 @@ export interface PaymentSubmission {
 
 export interface PaymentProof {
   id: string;
+  tenantId?: string; // Links to Tenant
+  unitId?: string; // Links to Unit
   proofNumber: string;
   submittedAt: string;
   tenantName: string;
@@ -72,15 +87,6 @@ export interface OverduePayment {
   unitName: string;
   amount: number;
   daysOverdue: number;
-}
-
-export interface Manager {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  city: string;
-  status: 'active' | 'inactive';
 }
 
 export interface Manager {

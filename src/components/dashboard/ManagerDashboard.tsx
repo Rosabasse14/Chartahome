@@ -2,6 +2,7 @@
 import { PageLayout } from "@/components/layout/PageLayout";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { NotificationCenter } from "@/components/common/NotificationCenter";
 import { useData } from "@/context/DataContext";
 import {
     DollarSign,
@@ -62,26 +63,27 @@ export function ManagerDashboard() {
                         <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest leading-none mb-1">{t.current_period}</span>
                         <span className="text-sm font-bold bg-primary/10 text-primary px-3 py-1 rounded-lg border border-primary/20">{periodString}</span>
                     </div>
+                    <NotificationCenter />
                 </div>
             </div>
 
             {/* Premium Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-10">
-                <div className="bg-card p-6 rounded-[2rem] border border-border/50 shadow-sm hover:shadow-md transition-all group">
+                <Link to="/properties" className="bg-card p-6 rounded-[2rem] border border-border/50 shadow-sm hover:shadow-md transition-all group block">
                     <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                         <Building2 className="w-5 h-5 text-indigo-600" />
                     </div>
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{t.properties}</p>
                     <h3 className="text-2xl font-black">{totalProperties}</h3>
-                </div>
+                </Link>
 
-                <div className="bg-card p-6 rounded-[2rem] border border-border/50 shadow-sm hover:shadow-md transition-all group">
+                <Link to="/units" className="bg-card p-6 rounded-[2rem] border border-border/50 shadow-sm hover:shadow-md transition-all group block">
                     <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                         <Home className="w-5 h-5 text-blue-600" />
                     </div>
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{t.total_units}</p>
                     <h3 className="text-2xl font-black">{totalUnitsCount}</h3>
-                </div>
+                </Link>
 
                 <div className="bg-card p-6 rounded-[2rem] border border-border/50 shadow-sm hover:shadow-md transition-all group">
                     <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -172,7 +174,7 @@ export function ManagerDashboard() {
                                                     <StatusBadge status={payment.status} />
                                                 </td>
                                                 <td className="px-6 py-5 text-right pr-8">
-                                                    <Link to="/payment-proofs" className="inline-flex items-center gap-1.5 text-primary text-xs font-bold hover:bg-primary/10 px-4 py-2 rounded-xl transition-all border border-primary/20 bg-white shadow-sm">
+                                                    <Link to="/payment-proofs" className="inline-flex items-center gap-1.5 text-primary text-xs font-bold hover:bg-primary/10 px-4 py-2 rounded-xl transition-all border border-primary/20 bg-white shadow-sm hover:shadow-md">
                                                         <ExternalLink className="w-3.5 h-3.5" />
                                                         {t.verify}
                                                     </Link>

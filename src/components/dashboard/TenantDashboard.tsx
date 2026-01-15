@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useData } from "@/context/DataContext";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { translations } from "@/utils/translations";
+import { NotificationCenter } from "@/components/common/NotificationCenter";
 
 export function TenantDashboard() {
     const { user, language } = useAuth();
@@ -77,10 +78,13 @@ export function TenantDashboard() {
                         </div>
                     </div>
                 </div>
-                <Link to="/payment-proofs" className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-2xl font-bold hover:bg-primary/90 transition-all shadow-xl shadow-primary/25 hover:shadow-primary/40 transform hover:-translate-y-1 active:scale-95">
-                    <Upload className="w-6 h-6" />
-                    {t.submit_payment}
-                </Link>
+                <div className="flex items-center gap-4">
+                    <NotificationCenter />
+                    <Link to="/payment-proofs" className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-2xl font-bold hover:bg-primary/90 transition-all shadow-xl shadow-primary/25 hover:shadow-primary/40 transform hover:-translate-y-1 active:scale-95">
+                        <Upload className="w-6 h-6" />
+                        {t.submit_payment}
+                    </Link>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">

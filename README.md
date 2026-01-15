@@ -1,73 +1,54 @@
-# Welcome to your Lovable project
+# Chartahome - Rental Management Platform
 
-## Project info
+A premium rental management platform built with React, Vite, and Tailwind CSS.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🚀 Technologies Used
+- **Vite** - Build Tool
+- **TypeScript** - Type Safety
+- **React** - UI Library
+- **Tailwind CSS** - Styling
+- **Supabase** - Backend & Database
+- **Lucide React** - Icons
+- **Shadcn UI** - Components
 
-## How can I edit this code?
+## 🛠️ Getting Started
 
-There are several ways of editing your application.
+### Prerequisites
+- Node.js installed
 
-**Use Lovable**
+### Installation
+```bash
+# Clone the repository
+git clone https://github.com/Rosabasse14/Chartahome.git
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+# Navigate to the project directory
+cd Chartahome
 
-Changes made via Lovable will be committed automatically to this repo.
+# Install dependencies
+npm install
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## 📦 Project Structure
+- `src/components`: Reusable UI components
+- `src/context`: Application state management (Auth, Data)
+- `src/pages`: Individual page views
+- `src/utils`: Helper functions and translations
+- `src/types`: TypeScript interfaces
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 🌐 Localization
+The application supports multiple languages:
+- English (EN)
+- French (FR)
 
-**Use GitHub Codespaces**
+## 🔐 Configuration
+Create a `.env` file in the root directory and add your Supabase credentials:
+```env
+VITE_SUPABASE_URL=your_project_url
+VITE_SUPABASE_ANON_KEY=your_anon_key
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 📄 License
+This project is private and owned by Rosabasse14.
